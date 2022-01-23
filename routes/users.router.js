@@ -1,111 +1,77 @@
 const express = require('express');
-const faker = require('faker');
+const UserService = require('./../services/user.service');
 
 const router = express.Router();
+const service = new UserService();
 
-function generateUsers(users, limit){
-  for (let i = 0; i < limit; i++) {
-    users.push({
-      id: faker.random.uuid(),
-      firstName: faker.name.firstName(),
-      LastName: faker.name.lastName(),
-      gender: faker.name.gender(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-      phone: faker.phone.phoneNumber(),
-      address: faker.address.streetAddress(),
-      city: faker.address.city(),
-      state: faker.address.state(),
-      zip: faker.address.zipCode(),
-      country: faker.address.country(),
-      avatar: faker.image.avatar(),
-    });
-  }
-}
+router.get('/', async (req, res) => {
 
-
-router.get('/', (req, res) => {
-
-  let users = [];
-  let { size } = req.query;
-  let limit = size || 100;
-
-  generateUsers(users, limit);
-
+  const users = await service.find();
   res.json(users);
-
 });
 
 
-router.get('/renata', (req, res) => {
-  res.json({
-    firstName: 'Renata Mavelyn',
-    lastMName: 'Dubon Madrid',
-    age: '23',
-    email: 'mavelyn.mi.amor@reinagatita.com',
-    nickname: 'Reina gatita pastelito',
-  });
-});
+router.get('/:id', async (req, res) => {
 
+  try{
+    const { id } = req.params;
+    const user = await service.findOne(id);
 
-router.get('/:id', (req, res) => {
-
-  let { id } = req.params;
-
-  res.json({
-    id,
-    firstName: faker.name.firstName(),
-    LastName: faker.name.lastName(),
-    gender: faker.name.gender(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-    phone: faker.phone.phoneNumber(),
-    address: faker.address.streetAddress(),
-    city: faker.address.city(),
-    state: faker.address.state(),
-    zip: faker.address.zipCode(),
-    country: faker.address.country(),
-    avatar: faker.image.avatar(),
-  });
+    res.json({
+      message: 'success',
+      data: user
+    });
+  }catch(e){
+    res.status(404).json({ message: e.message });
+  }
 });
 
 
 //POST
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
 
-  let body = req.body;
+  const body = req.body;
+  const user = await service.create(body);
 
   res.status(201).json({
     message: 'created',
-    data: body,
+    data: user,
   });
 });
 
 
 //PATCH update parcial
-router.patch('/:id', (req, res) => {
-  let { id } = req.params;
-  let body = req.body;
+router.patch('/:id', async (req, res) => {
+  try{
+    const { id } = req.params;
+    const body = req.body;
+    const user = await service.update(id, body);
 
-  res.json({
-    message: 'updated',
-    data: req.body,
-    id,
-  });
-
+    res.json({
+      message: 'updated',
+      data: user,
+    });
+  }catch(e){
+    res.status(404).json({ message: e.message });
+  }
 })
 
 
 
 //DELETE
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
 
-  let { id } = req.params;
+  try{
+    const { id } = req.params;
+    const user = await service.delete(id);
 
-  res.json({
-    message: 'deleted',
-    id,
-  });
+    res.json({
+      message: 'deleted',
+      data: user,
+    });
+  }catch(e){
+    res.status(404).json({ message: e.message });
+  }
 });
 
 module.exports = router;

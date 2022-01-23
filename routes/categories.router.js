@@ -1,78 +1,75 @@
 const express = require('express');
-const faker = require('faker');
-
+const CategoryService = require('./../services/category.service');
 const router = express.Router();
 
-
-function generateCategories(categories, limit){
-  for (let i = 0; i < limit; i++) {
-    categories.push({
-      id: faker.random.uuid(),
-      name: faker.commerce.productName(),
-      description: faker.commerce.productDescription(),
-    });
-  }
-}
+const service = new CategoryService();
 
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
 
-  let categories = [];
-  let { size } = req.query;
-  let limit = size || 100;
-
-  generateCategories(categories, limit);
-
+  const categories = await service.find();
   res.json(categories);
 });
 
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
 
-  let { id } = req.params;
+  try{
+    const { id } = req.params;
+    const category = await service.findOne(id);
 
-  res.json({
-    id,
-    name: faker.commerce.productName(),
-    description: faker.commerce.productDescription(),
-  });
+    res.json(category);
+
+  }catch(e){
+    res.status(404).json({ message: e.message });
+  }
+
 });
 
 
 //POST
-router.post('/', (req, res) => {
-  let body = req.body;
+router.post('/', async (req, res) => {
+  const body = req.body;
+  const category = await service.create(body);
 
   res.status(201).json({
     message: 'created',
-    data: body,
+    data: category,
   });
 });
 
 
 //PATCH update parcial
-router.patch('/:id', (req, res) => {
+router.patch('/:id', async (req, res) => {
 
-  let body = req.body;
-  let { id } = req.params;
+  try{
+    let body = req.body;
+    let { id } = req.params;
+    const category = await service.update(id, body);
 
-  res.json({
-    message: 'updated',
-    data: body,
-    id,
-  });
+    res.json({
+      message: 'updated',
+      data: category,
+    });
+  }catch(e){
+    res.status(404).json({ message: e.message });
+  }
 
 });
 
 
 //DELETE
-router.delete('/:id', (req, res) => {
-  let { id } = req.params;
-
-  res.json({
-    message: 'deleted',
-    id,
-  });
+router.delete('/:id', async (req, res) => {
+  try{
+    let { id } = req.params;
+    const category = await service.delete(id);
+    res.json({
+      message: 'deleted',
+      data: category,
+    });
+  }catch(e){
+    res.status(404).json({ message: e.message });
+  }
 });
 
 module.exports = router;

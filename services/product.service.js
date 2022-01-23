@@ -1,5 +1,6 @@
 
 const faker = require("faker");
+const boom = require("@hapi/boom");
 
 class ProductService{
 
@@ -20,54 +21,70 @@ class ProductService{
         name: faker.commerce.productName(),
         price: parseInt( faker.commerce.price(), 10 ),
         image: faker.image.image(),
+        isBlock: faker.random.boolean(),
       });
     }
   }
 
 
-  create(body){
-    this.products.push(body);
+  async create(body){
 
-    return {
-      message: 'created',
-      data: body
+    const newProduct = {
+      id:faker.random.uuid(),
+      ...body
     };
+
+    this.products.push(newProduct);
+
+    return newProduct;
   }
 
 
-  find(){
+  async find(){
     return this.products;
   }
 
-  findOne(id){
-    return this.products.find( product => product.id === id );
+  async findOne(id){
+
+    const product = this.products.find(item => item.id === id);
+    if(!product) {
+      throw boom.notFound('Product not found');
+    }
+    if(this.products){
+      throw boom.conflict('Product is block');
+    }
+    return product;
   }
 
 
-  update(id, body){
+  async update(id, changes){
+    const index = this.products.findIndex( product => product.id === id );
 
-    this.products = this.products.map(
-        product => product.id !== id ? product: {id, ...body}
-      );
-
-    return {
-      message: 'updated',
-      data: this.products,
-      id,
+    if(index === -1){
+      throw boom.notFound('Product not found');
     }
+
+    const currentProduct = this.products[index];
+    this.products[index] = {
+      ...currentProduct,
+      ...changes
+    }
+
+    return this.products[index];
   }
 
 
-  delete(product){
+  async delete(id){
 
-    this.products = this.products.filter( function(item){
-      return item !== product;
-    } );
+    const index = this.products.findIndex(product => product.id === id);
 
-    return {
-      message: 'deleted',
-      id: product.id,
+    if(index === -1){
+      throw boom.notFound('Product not found');
     }
+
+    const deleted = this.products.splice(index, 1);
+
+    return deleted;
   }
 
 }
