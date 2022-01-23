@@ -3,7 +3,7 @@ const routerApi = require('./routes');
 const cors = require('cors');
 const { logErrors, errorHandler, boomErrorHandler } = require('./middlewares/error.handler');
 const app = express();
-const port = 3000;
+const port =  process.env.PORT || 3000;
 
 
 //middleware -> recibir información de tipo JSON que envian por el método POST
@@ -12,7 +12,7 @@ app.use(express.json());
 const whitlist = ['http://localhost:8080'];
 const options = {
   origin: (origin, callback) => {
-    if (whitlist.includes(origin)) {
+    if (whitlist.includes(origin) || !origin) {
       callback(null, true)
     } else {
       callback(new Error('No permitido'))
