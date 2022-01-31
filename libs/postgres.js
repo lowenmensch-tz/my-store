@@ -1,10 +1,10 @@
 const { Client } = require('pg');
 
-function getConection() {
+async function getConnection() {
   const client =  new Client({
     host: 'localhost',
     port: 5432,
-    user: 'postgres',
+    user: 'admin',
     password: 'admin',
     database: 'my_store'
   });
@@ -13,4 +13,4 @@ function getConection() {
   return client;
 }
 
-module.exports = getConection;
+module.exports = getConnection;

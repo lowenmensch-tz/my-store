@@ -1,14 +1,49 @@
 # Use postgres/example user/password credentials
-version: '3.1'
+version: "3.3"
 
 services:
-
-  db:
-    image: postgres
-    restart: always
-    volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+  qualia:
+    image: postgres:latest
     environment:
+      POSTGRES_DB: my_store
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: my_store
+    ports:
+      - "5432:5432"
+    volumes:
+      - "~/postgres_data:/var/lib/postgresql/data"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=kenneth-cruz@outlook.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - 5050:80
+
+  mysql:
+    image: mysql:5
+    environment:
+        - MYSQL_DATABASE=my_store
+        - MYSQL_USER=root
+        - MYSQL_ROOT_PASSWORD=admin
+        - MYSQL_PORT=3306
+    ports:
+        - "3306:3306"
+    volumes:
+        - ./mysql_data:/var/lib/mysql
+
+  mysql-workbench:
+      image: lscr.io/linuxserver/mysql-workbench
+      container_name: mysql-workbench
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=Europe/London
+      volumes:
+        - /path/to/config:/config
+      ports:
+        - 3000:3000
+      cap_add:
+        - IPC_LOCK
+      restart: unless-stopped

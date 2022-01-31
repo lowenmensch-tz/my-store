@@ -1,5 +1,7 @@
 const express = require('express');
 const UserService = require('./../services/user.service');
+const validatorHandler = require('./../middlewares/validator.handler');
+const { createUserSchema, updateUserSchema, getUserSchema } = require('./../schemas/user.schemas');
 
 const router = express.Router();
 const service = new UserService();
@@ -11,55 +13,66 @@ router.get('/', async (req, res) => {
 });
 
 
-router.get('/:id', async (req, res) => {
+router.get('/:id',
+  validatorHandler(getUserSchema, 'params'),
+  async (req, res, next) => {
 
-  try{
-    const { id } = req.params;
-    const user = await service.findOne(id);
+      try{
+        const { id } = req.params;
+        const user = await service.findOne(id);
 
-    res.json({
-      message: 'success',
-      data: user
+        res.json({
+          message: 'success',
+          data: user
+        });
+      }catch(e){
+        next(e);
+      }
     });
-  }catch(e){
-    res.status(404).json({ message: e.message });
-  }
-});
 
 
 //POST
-router.post('/', async (req, res) => {
+router.post('/',
+  validatorHandler(createUserSchema, 'body'),
+  async (req, res, next) => {
+    try{
+      const body = req.body;
+      const user = await service.create(body);
 
-  const body = req.body;
-  const user = await service.create(body);
+      res.status(201).json({
+        message: 'created',
+        data: user,
+      });
+    } catch(e){
+      next(e);
+    }
 
-  res.status(201).json({
-    message: 'created',
-    data: user,
-  });
-});
+    });
 
 
 //PATCH update parcial
-router.patch('/:id', async (req, res) => {
-  try{
-    const { id } = req.params;
-    const body = req.body;
-    const user = await service.update(id, body);
+router.patch('/:id',
+  validatorHandler(getUserSchema, 'params'),
+  validatorHandler(updateUserSchema, 'body'),
+    async (req, res, next) => {
+      try{
+        const { id } = req.params;
+        const body = req.body;
+        const user = await service.update(id, body);
 
-    res.json({
-      message: 'updated',
-      data: user,
-    });
-  }catch(e){
-    res.status(404).json({ message: e.message });
-  }
-})
+        res.json({
+          message: 'updated',
+          data: user,
+        });
+      }catch(e){
+        next(e);
+      }
+    })
 
 
 
 //DELETE
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
 
   try{
     const { id } = req.params;
@@ -70,7 +83,7 @@ router.delete('/:id', async (req, res) => {
       data: user,
     });
   }catch(e){
-    res.status(404).json({ message: e.message });
+    next(e);
   }
 });
 

@@ -1,23 +1,13 @@
 const faker = require('faker');
+const boom = require("@hapi/boom");
+const pool = require('../libs/postgres.pool');
 
 class CategoryService{
 
   constructor(){
     this.categories = [];
-    this.generate();
-  }
-
-
-  generate(){
-    const limit = 100;
-
-    for (let i = 0; i < limit; i++) {
-      this.categories.push({
-        id: faker.random.uuid(),
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-      });
-    }
+    this.pool = pool;
+    this.pool.on('error', (err) => console.error('Unexpected error on idle client', err) );
   }
 
 
@@ -33,25 +23,27 @@ class CategoryService{
 
 
   async find(){
-    return this.categories;
+    const query = 'SELECT * FROM category';
+    const rta = await pool.query(query);
+    return rta.rows;
   }
 
 
   async findOne(id){
 
-    const index = this.categories.findIndex(category => category.id === id);
-    if(index === -1){
-      throw new Error('Product not found');
+    const category = this.categorories.find(item => item.id === id);
+    if(!category) {
+      throw boom.notFound('Category not found');
     }
-    return this.categories[index];
+    return category;
   }
 
 
   async update(id, changes){
-    const index = this.categories.findIndex(category => category.id === id);
 
+    const index = this.categories.findIndex(category => category.id === id);
     if(index === -1){
-      throw new Error('Product not found');
+      throw boom.notFound('Category not found');
     }
 
     const currentCategory = this.categories[index];
@@ -66,10 +58,11 @@ class CategoryService{
 
 
   async delete(id){
+
     const index = this.categories.findIndex(category => category.id === id);
 
     if(index === -1){
-      throw new Error('Product not found');
+      throw boom.notFound('Category not found');
     }
 
     const deleted = this.categories.splice(index, 1);
